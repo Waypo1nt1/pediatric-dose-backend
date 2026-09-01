@@ -1,0 +1,545 @@
+/*
+    Источник стилистики: apteka.ru, каталог лекарственных препаратов.
+
+    Что скопировано с сайта-референса:
+    1. Фирменный цвет #4665D7 - ссылки, названия карточек, активная вкладка,
+       счётчик лайков, нижняя точка градиента кнопок.
+    2. Верхняя точка градиента кнопок #6B84DF: linear-gradient(180deg, #6B84DF, #4665D7).
+    3. Цвет заголовков и полужирных подзаголовков #1C257B.
+    4. Цвет основного текста #000000.
+    5. Состояние hover: у кнопки градиент сменяется сплошной заливкой #4665D7,
+       название карточки подчёркивается и темнеет до #1C257B,
+       карточка приподнимается на 2px и получает более плотную тень.
+    6. Форма карточек: белый фон, скругление 12px, тонкая граница #E3E7F5
+       и мягкая тень, изображение занимает всю ширину карточки.
+*/
+
+:root {
+    --brand-primary: #4665D7;
+    --brand-primary-light: #6B84DF;
+    --brand-gradient: linear-gradient(180deg, #6B84DF, #4665D7);
+    --brand-heading: #1C257B;
+    --brand-ink: #000000;
+    --brand-muted: #6E7796;
+    --page: #F4F6FC;
+    --surface: #FFFFFF;
+    --line: #E3E7F5;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100%;
+    display: flex;
+    background: var(--page);
+    color: var(--brand-ink);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+body.body-feed {
+    background: #000000;
+}
+
+.app {
+    position: relative;
+    flex: none;
+    width: 390px;
+    height: 844px;
+    margin: auto;
+    overflow: hidden;
+    background: var(--page);
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 72px;
+    overflow-y: auto;
+    padding: 16px 16px 12px;
+}
+
+.screen-feed {
+    padding: 0;
+    overflow: hidden;
+    background: #000000;
+}
+
+.app-feed {
+    background: #000000;
+}
+
+.screen-header {
+    margin-bottom: 14px;
+}
+
+.screen-title {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--brand-heading);
+}
+
+.screen-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--brand-muted);
+}
+
+.dose-filter {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.dose-filter-label {
+    display: block;
+    font-size: 12px;
+    color: var(--brand-muted);
+    margin-bottom: 6px;
+}
+
+.dose-filter-row {
+    display: flex;
+    gap: 8px;
+}
+
+.dose-filter-input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--brand-ink);
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.dose-filter-input:focus {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 1px;
+}
+
+.dose-filter-button {
+    height: 38px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--brand-gradient);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.dose-filter-button:hover {
+    background: var(--brand-primary);
+}
+
+.drug-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.drug-tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 1px 3px rgba(42, 51, 82, 0.06);
+}
+
+.drug-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(42, 51, 82, 0.14);
+}
+
+.drug-tile-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.drug-tile-image {
+    display: block;
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--page);
+}
+
+.drug-tile-name {
+    margin: 8px 0 0;
+    font-size: 15px;
+    line-height: 1.25;
+    color: var(--brand-primary);
+}
+
+.drug-tile-link:hover .drug-tile-name {
+    color: var(--brand-heading);
+    text-decoration: underline;
+}
+
+.drug-tile-dose {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--brand-muted);
+}
+
+.drug-tile-likes {
+    margin: 8px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-primary);
+}
+
+.like-heart {
+    margin-right: 5px;
+}
+
+.empty-note {
+    margin: 24px 0;
+    text-align: center;
+    color: var(--brand-muted);
+}
+
+.screen-feed .empty-note {
+    color: var(--surface);
+    padding: 0 16px;
+}
+
+.drug-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.drug-scrim {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 72%);
+}
+
+.drug-rail {
+    position: absolute;
+    right: 14px;
+    bottom: 118px;
+    width: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    text-align: right;
+    color: var(--surface);
+}
+
+.drug-params {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.drug-param-label {
+    font-size: 11px;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.drug-param-value {
+    margin: 2px 0 0;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.drug-rail-icon {
+    width: 26px;
+    height: 26px;
+}
+
+.drug-rail-caption {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.drug-like {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 52px;
+    font-weight: 600;
+    color: var(--brand-primary-light);
+}
+
+.drug-next {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 52px;
+    text-decoration: none;
+    color: var(--surface);
+}
+
+.drug-next:hover {
+    color: var(--brand-primary-light);
+}
+
+.drug-caption {
+    position: absolute;
+    left: 16px;
+    right: 118px;
+    bottom: 16px;
+    color: var(--surface);
+}
+
+.drug-title {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.2;
+}
+
+.drug-description {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.drug-description-summary {
+    cursor: pointer;
+    list-style: none;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.drug-description-summary::-webkit-details-marker {
+    display: none;
+}
+
+.drug-description-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.drug-description[open] .drug-description-text {
+    display: block;
+    overflow: visible;
+}
+
+.drug-description-toggle::after {
+    content: "ещё";
+    font-weight: 600;
+    color: var(--brand-primary-light);
+}
+
+.drug-description[open] .drug-description-toggle::after {
+    content: "свернуть";
+}
+
+.draft-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.draft-section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.draft-section-title {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.draft-media {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.draft-media-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.draft-preview-image {
+    display: block;
+    flex: none;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--page);
+}
+
+.draft-preview-video {
+    display: block;
+    flex: none;
+    width: 48px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #000000;
+}
+
+.draft-dose-row {
+    display: flex;
+    gap: 10px;
+}
+
+.draft-dose-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.draft-file {
+    display: block;
+    width: 100%;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--brand-muted);
+}
+
+.draft-file::file-selector-button {
+    margin-right: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--brand-gradient);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.draft-file::file-selector-button:hover {
+    background: var(--brand-primary);
+}
+
+.draft-label {
+    display: block;
+    font-size: 12px;
+    color: var(--brand-muted);
+    margin-bottom: 4px;
+}
+
+.draft-label + .draft-input,
+.draft-label + .draft-textarea {
+    margin-bottom: 10px;
+}
+
+.draft-section > *:last-child {
+    margin-bottom: 0;
+}
+
+.draft-input,
+.draft-textarea {
+    display: block;
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--brand-ink);
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    resize: none;
+}
+
+.draft-input:focus,
+.draft-textarea:focus {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 1px;
+}
+
+.draft-button {
+    height: 44px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--brand-gradient);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.draft-button:hover {
+    background: var(--brand-primary);
+}
+
+.tabbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 72px;
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+}
+
+.tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--brand-muted);
+}
+
+.tab:hover {
+    color: var(--brand-primary);
+}
+
+.tab-active {
+    color: var(--brand-primary);
+}
+
+.tab-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.tab-label {
+    font-size: 11px;
+}
