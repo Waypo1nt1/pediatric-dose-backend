@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Добавление препарата</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body>
+<div class="app">
+    <div class="screen">
+        <header class="screen-header">
+            <h1 class="screen-title">Добавление препарата</h1>
+            <p class="screen-subtitle">Черновик карточки препарата</p>
+        </header>
+
+        {{ if .Drug.DrugID }}
+        <div class="draft-form">
+            <section class="draft-section">
+                <h2 class="draft-section-title">Изображение препарата</h2>
+                <div class="draft-media">
+                    <img class="draft-preview-image" src="{{ .MediaBaseURL }}/{{ .Drug.ImageKey }}" alt="{{ .Drug.DrugName }}">
+                    <div class="draft-media-field">
+                        <label class="draft-label" for="image_file">Файл изображения</label>
+                        <input class="draft-file" type="file" id="image_file" name="image_file" accept="image/jpeg">
+                    </div>
+                </div>
+            </section>
+
+            <section class="draft-section">
+                <h2 class="draft-section-title">Видео препарата</h2>
+                <div class="draft-media">
+                    <video class="draft-preview-video"
+                           src="{{ .MediaBaseURL }}/{{ .Drug.VideoKey }}"
+                           poster="{{ .MediaBaseURL }}/{{ .Drug.ImageKey }}"
+                           autoplay loop muted playsinline></video>
+                    <div class="draft-media-field">
+                        <label class="draft-label" for="video_file">Файл видео</label>
+                        <input class="draft-file" type="file" id="video_file" name="video_file" accept="video/mp4">
+                    </div>
+                </div>
+            </section>
+
+            <section class="draft-section">
+                <h2 class="draft-section-title">Описание препарата</h2>
+                <label class="draft-label" for="drug_name">Наименование</label>
+                <input class="draft-input" type="text" id="drug_name" name="drug_name" value="{{ .Drug.DrugName }}">
+
+                <label class="draft-label" for="short_info">Краткое описание</label>
+                <textarea class="draft-textarea" id="short_info" name="short_info" rows="3">{{ .Drug.ShortInfo }}</textarea>
+            </section>
+
+            <section class="draft-section">
+                <h2 class="draft-section-title">Дозировка</h2>
+                <div class="draft-dose-row">
+                    <div class="draft-dose-field">
+                        <label class="draft-label" for="recommended_adult_dose_mg">Взрослая доза, мг</label>
+                        <input class="draft-input" type="number" id="recommended_adult_dose_mg" name="recommended_adult_dose_mg" value="{{ .Drug.RecommendedAdultDoseMg }}">
+                    </div>
+                    <div class="draft-dose-field">
+                        <label class="draft-label" for="max_daily_dose_mg">Максимум в сутки, мг</label>
+                        <input class="draft-input" type="number" id="max_daily_dose_mg" name="max_daily_dose_mg" value="{{ .Drug.MaxDailyDoseMg }}">
+                    </div>
+                </div>
+            </section>
+
+            <button class="draft-button" type="button">Опубликовать</button>
+        </div>
+        {{ else }}
+        <p class="empty-note">Препарат в статусе черновик отсутствует</p>
+        {{ end }}
+    </div>
+
+    {{ template "tabbar" . }}
+</div>
+</body>
+</html>

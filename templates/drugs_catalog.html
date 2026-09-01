@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Каталог препаратов</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body>
+<div class="app">
+    <div class="screen">
+        <header class="screen-header">
+            <h1 class="screen-title">Каталог препаратов</h1>
+            <p class="screen-subtitle">Рекомендованные дозировки для взрослых</p>
+        </header>
+
+        <form class="dose-filter" action="/drugs" method="GET">
+            <label class="dose-filter-label" for="max_adult_dose">Взрослая доза не более, мг</label>
+            <div class="dose-filter-row">
+                <input class="dose-filter-input" type="number" id="max_adult_dose" name="max_adult_dose" min="0" step="1" placeholder="например, 500" value="{{ .MaxAdultDose }}">
+                <button class="dose-filter-button" type="submit">Найти</button>
+            </div>
+        </form>
+
+        {{ if .DrugCards }}
+        <ul class="drug-grid">
+            {{ range .DrugCards }}
+            <li class="drug-tile">
+                <a class="drug-tile-link" href="/drug-feed/{{ .DrugID }}">
+                    <img class="drug-tile-image" src="{{ $.MediaBaseURL }}/{{ .ImageKey }}" alt="{{ .DrugName }}">
+                    <h2 class="drug-tile-name">{{ .DrugName }}</h2>
+                </a>
+                <p class="drug-tile-dose">{{ .RecommendedAdultDoseMg }} мг для взрослого</p>
+                <p class="drug-tile-likes">
+                    <span class="like-heart">&#9829;</span>{{ .LikesCount }}
+                </p>
+            </li>
+            {{ end }}
+        </ul>
+        {{ else }}
+        <p class="empty-note">Препараты с такой дозировкой не найдены</p>
+        {{ end }}
+    </div>
+
+    {{ template "tabbar" . }}
+</div>
+</body>
+</html>

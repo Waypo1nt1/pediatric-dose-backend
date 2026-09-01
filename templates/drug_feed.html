@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Лента препаратов</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body class="body-feed">
+<div class="app app-feed">
+    <div class="screen screen-feed">
+        {{ if .Drug.DrugID }}
+        <video class="drug-video"
+               src="{{ .MediaBaseURL }}/{{ .Drug.VideoKey }}"
+               poster="{{ .MediaBaseURL }}/{{ .Drug.ImageKey }}"
+               autoplay loop muted playsinline></video>
+
+        <div class="drug-scrim"></div>
+
+        <div class="drug-rail">
+            <dl class="drug-params">
+                <div class="drug-param">
+                    <dt class="drug-param-label">Взрослая доза</dt>
+                    <dd class="drug-param-value">{{ .Drug.RecommendedAdultDoseMg }} мг</dd>
+                </div>
+                <div class="drug-param">
+                    <dt class="drug-param-label">Максимум в сутки</dt>
+                    <dd class="drug-param-value">{{ .Drug.MaxDailyDoseMg }} мг</dd>
+                </div>
+            </dl>
+
+            <p class="drug-like">
+                <svg class="drug-rail-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 20.6l-1.3-1.2C5.8 15 2.8 12.3 2.8 8.9c0-2.6 2.1-4.7 4.7-4.7 1.5 0 2.9.7 3.8 1.8l.7.9.7-.9c.9-1.1 2.3-1.8 3.8-1.8 2.6 0 4.7 2.1 4.7 4.7 0 3.4-3 6.1-7.9 10.5l-1.3 1.2z"></path>
+                </svg>
+                <span class="drug-rail-caption">{{ .LikesCount }}</span>
+            </p>
+
+            <a class="drug-next" href="/drug-feed/{{ .Drug.DrugID }}?next=true">
+                <svg class="drug-rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h13M13 6l6 6-6 6"></path>
+                </svg>
+                <span class="drug-rail-caption">Далее</span>
+            </a>
+        </div>
+
+        <div class="drug-caption">
+            <h1 class="drug-title">{{ .Drug.DrugName }}</h1>
+
+            <details class="drug-description">
+                <summary class="drug-description-summary">
+                    <span class="drug-description-text">{{ .Drug.ShortInfo }}</span>
+                    <span class="drug-description-toggle"></span>
+                </summary>
+            </details>
+        </div>
+        {{ else }}
+        <p class="empty-note">Опубликованные препараты отсутствуют</p>
+        {{ end }}
+    </div>
+
+    {{ template "tabbar" . }}
+</div>
+</body>
+</html>
