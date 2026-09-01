@@ -1,0 +1,14 @@
+/pediatric-dose-backend
+/pediatric-dose-backend.exe
+*.exe
+*.test
+*.out
+
+/media/
+
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+srv.log
+srv.err
