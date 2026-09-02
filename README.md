@@ -50,6 +50,7 @@ internal/app/repository      коллекция препаратов и дост
 internal/app/handler         контроллеры страниц
 templates                    шаблоны трёх страниц и панели вкладок
 resources/styles             таблица стилей
+resources/fonts              шрифт Inter для `@font-face`
 ```
 
 ## Запуск
