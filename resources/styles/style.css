@@ -221,12 +221,14 @@ body.body-feed {
 .drug-tile-dose {
     margin: 4px 0 0;
     font-size: 12px;
+    line-height: 1.25;
     color: var(--brand-muted);
 }
 
 .drug-tile-likes {
     margin: 8px 0 0;
     font-size: 13px;
+    line-height: 1.25;
     font-weight: 600;
     color: var(--brand-primary);
 }
