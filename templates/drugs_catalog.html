@@ -15,11 +15,25 @@
         </header>
 
         <form class="dose-filter" action="/drugs" method="GET">
-            <label class="dose-filter-label" for="max_adult_dose">Взрослая доза не более, мг</label>
-            <div class="dose-filter-row">
-                <input class="dose-filter-input" type="number" id="max_adult_dose" name="max_adult_dose" min="0" step="1" placeholder="например, 500" value="{{ .MaxAdultDose }}">
-                <button class="dose-filter-button" type="submit">Найти</button>
+            <p class="dose-filter-label">Взрослая доза, мг</p>
+
+            <div class="dose-slider-row">
+                <label class="dose-slider-caption" for="min_adult_dose">от</label>
+                <input class="dose-slider" type="range" id="min_adult_dose" name="min_adult_dose" min="{{ .AdultDoseSliderMin }}" max="{{ .AdultDoseSliderMax }}" step="10" value="{{ .MinAdultDose }}">
+                <span class="dose-slider-value">{{ .MinAdultDose }}</span>
             </div>
+
+            <div class="dose-slider-row">
+                <label class="dose-slider-caption" for="max_adult_dose">до</label>
+                <input class="dose-slider" type="range" id="max_adult_dose" name="max_adult_dose" min="{{ .AdultDoseSliderMin }}" max="{{ .AdultDoseSliderMax }}" step="10" value="{{ .MaxAdultDose }}">
+                <span class="dose-slider-value">{{ .MaxAdultDose }}</span>
+            </div>
+
+            <div class="dose-slider-scale">
+                {{ range .AdultDoseScale }}<span class="dose-slider-mark">{{ . }}</span>{{ end }}
+            </div>
+
+            <button class="dose-filter-button" type="submit">Найти</button>
         </form>
 
         {{ if .DrugCards }}

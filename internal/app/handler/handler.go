@@ -11,6 +11,12 @@ import (
 	"pediatric-dose-backend/internal/app/repository"
 )
 
+const (
+	adultDoseSliderMinMg = 0
+	adultDoseSliderMaxMg = 1000
+	adultDoseScaleMarks  = 4
+)
+
 type Handler struct {
 	Repository   *repository.Repository
 	MediaBaseURL string
@@ -29,14 +35,23 @@ func NewHandler(r *repository.Repository, mediaBaseURL string) *Handler {
 }
 
 func (h *Handler) GetDrugCatalog(ctx *gin.Context) {
+	minAdultDoseValue := ctx.Query("min_adult_dose")
 	maxAdultDoseValue := ctx.Query("max_adult_dose")
 
-	maxAdultDoseMg, err := strconv.ParseFloat(maxAdultDoseValue, 64)
-	if err != nil {
-		maxAdultDoseMg = 0
+	minAdultDoseMg := parseAdultDose(minAdultDoseValue, adultDoseSliderMinMg)
+	maxAdultDoseMg := parseAdultDose(maxAdultDoseValue, adultDoseSliderMaxMg)
+	if minAdultDoseMg > maxAdultDoseMg {
+		minAdultDoseMg, maxAdultDoseMg = maxAdultDoseMg, minAdultDoseMg
 	}
 
-	drugs, err := h.Repository.GetPublishedDrugs(maxAdultDoseMg)
+	var drugs []repository.Drug
+	var err error
+
+	if minAdultDoseValue == "" && maxAdultDoseValue == "" {
+		drugs, err = h.Repository.GetPublishedDrugs()
+	} else {
+		drugs, err = h.Repository.GetPublishedDrugsByAdultDose(minAdultDoseMg, maxAdultDoseMg)
+	}
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -50,10 +65,14 @@ func (h *Handler) GetDrugCatalog(ctx *gin.Context) {
 	}
 
 	ctx.HTML(http.StatusOK, "drugs_catalog.html", gin.H{
-		"DrugCards":    drugCards,
-		"MaxAdultDose": maxAdultDoseValue,
-		"MediaBaseURL": h.MediaBaseURL,
-		"ActiveTab":    "catalog",
+		"DrugCards":          drugCards,
+		"MinAdultDose":       minAdultDoseMg,
+		"MaxAdultDose":       maxAdultDoseMg,
+		"AdultDoseSliderMin": adultDoseSliderMinMg,
+		"AdultDoseSliderMax": adultDoseSliderMaxMg,
+		"AdultDoseScale":     adultDoseScale(),
+		"MediaBaseURL":       h.MediaBaseURL,
+		"ActiveTab":          "catalog",
 	})
 }
 
@@ -101,4 +120,32 @@ func (h *Handler) GetDrugDraft(ctx *gin.Context) {
 		"MediaBaseURL": h.MediaBaseURL,
 		"ActiveTab":    "draft",
 	})
+}
+
+func parseAdultDose(value string, fallback float64) float64 {
+	dose, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fallback
+	}
+
+	if dose < adultDoseSliderMinMg {
+		return adultDoseSliderMinMg
+	}
+
+	if dose > adultDoseSliderMaxMg {
+		return adultDoseSliderMaxMg
+	}
+
+	return dose
+}
+
+func adultDoseScale() []int {
+	step := (adultDoseSliderMaxMg - adultDoseSliderMinMg) / adultDoseScaleMarks
+
+	scale := make([]int, 0, adultDoseScaleMarks+1)
+	for mark := adultDoseSliderMinMg; mark <= adultDoseSliderMaxMg; mark += step {
+		scale = append(scale, mark)
+	}
+
+	return scale
 }

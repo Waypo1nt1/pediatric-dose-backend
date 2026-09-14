@@ -141,19 +141,30 @@ func NewRepository() (*Repository, error) {
 	return &Repository{drugs: drugs}, nil
 }
 
-func (r *Repository) GetPublishedDrugs(maxAdultDoseMg float64) ([]Drug, error) {
+func (r *Repository) GetPublishedDrugs() ([]Drug, error) {
 	result := make([]Drug, 0, len(r.drugs))
 
 	for _, drug := range r.drugs {
-		if drug.DrugStatus != StatusPublished {
-			continue
+		if drug.DrugStatus == StatusPublished {
+			result = append(result, drug)
 		}
+	}
 
-		if maxAdultDoseMg > 0 && drug.RecommendedAdultDoseMg > maxAdultDoseMg {
-			continue
+	return result, nil
+}
+
+func (r *Repository) GetPublishedDrugsByAdultDose(minAdultDoseMg, maxAdultDoseMg float64) ([]Drug, error) {
+	published, err := r.GetPublishedDrugs()
+	if err != nil {
+		return []Drug{}, err
+	}
+
+	result := make([]Drug, 0, len(published))
+
+	for _, drug := range published {
+		if drug.RecommendedAdultDoseMg >= minAdultDoseMg && drug.RecommendedAdultDoseMg <= maxAdultDoseMg {
+			result = append(result, drug)
 		}
-
-		result = append(result, drug)
 	}
 
 	return result, nil
@@ -170,7 +181,7 @@ func (r *Repository) GetDrugByID(drugID int) (Drug, error) {
 }
 
 func (r *Repository) GetNextDrug(drugID int) (Drug, error) {
-	published, err := r.GetPublishedDrugs(0)
+	published, err := r.GetPublishedDrugs()
 	if err != nil {
 		return Drug{}, err
 	}
@@ -189,7 +200,7 @@ func (r *Repository) GetNextDrug(drugID int) (Drug, error) {
 }
 
 func (r *Repository) GetFirstPublishedDrug() (Drug, error) {
-	published, err := r.GetPublishedDrugs(0)
+	published, err := r.GetPublishedDrugs()
 	if err != nil {
 		return Drug{}, err
 	}
