@@ -509,21 +509,7 @@ body.body-feed {
     outline-offset: 1px;
 }
 
-.draft-button {
-    height: 44px;
-    font-size: 15px;
-    font-family: inherit;
-    font-weight: 600;
-    color: var(--surface);
-    background: var(--brand-gradient);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-}
 
-.draft-button:hover {
-    background: var(--brand-primary);
-}
 
 .tabbar {
     position: absolute;
