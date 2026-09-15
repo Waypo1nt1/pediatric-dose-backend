@@ -12,3 +12,5 @@
 Thumbs.db
 srv.log
 srv.err
+
+.env
