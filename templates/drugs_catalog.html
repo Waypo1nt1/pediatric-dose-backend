@@ -40,14 +40,28 @@
         <ul class="drug-grid">
             {{ range .DrugCards }}
             <li class="drug-tile">
-                <a class="drug-tile-link" href="/drug-feed/{{ .DrugID }}">
-                    <img class="drug-tile-image" src="{{ $.MediaBaseURL }}/{{ .ImageKey }}" alt="{{ .DrugName }}">
+                <a class="drug-tile-link" href="/drug-feed/{{ .ID }}">
+                    {{ if .ImageURL.String }}
+                    <object class="drug-tile-image" data="{{ .ImageURL.String }}" type="image/jpeg">
+                        <img class="drug-tile-image" src="/static/media/default-drug.jpg" alt="{{ .DrugName }}">
+                    </object>
+                    {{ else }}
+                    <img class="drug-tile-image" src="/static/media/default-drug.jpg" alt="{{ .DrugName }}">
+                    {{ end }}
                     <h2 class="drug-tile-name">{{ .DrugName }}</h2>
                 </a>
-                <p class="drug-tile-dose">{{ .RecommendedAdultDoseMg }} мг для взрослого</p>
+                <p class="drug-tile-dose">{{ .RecommendedAdultDoseMg.Float64 }} мг для взрослого</p>
                 <p class="drug-tile-likes">
                     <span class="like-heart">&#9829;</span>{{ .LikesCount }}
                 </p>
+                <form class="drug-delete" action="/drugs/delete" method="POST">
+                    <input type="hidden" name="drug_id" value="{{ .ID }}">
+                    <button class="drug-delete-button" type="submit" title="Удалить препарат">
+                        <svg class="drug-delete-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path>
+                        </svg>
+                    </button>
+                </form>
             </li>
             {{ end }}
         </ul>

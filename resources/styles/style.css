@@ -260,6 +260,7 @@ body.body-feed {
 }
 
 .drug-tile {
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
@@ -283,8 +284,41 @@ body.body-feed {
     width: 100%;
     height: 110px;
     object-fit: cover;
+    overflow: hidden;
     border-radius: 8px;
     background: var(--page);
+}
+
+.drug-delete {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    margin: 0;
+}
+
+.drug-delete-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    color: var(--brand-primary);
+    background: var(--surface);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(42, 51, 82, 0.3);
+    cursor: pointer;
+}
+
+.drug-delete-button:hover {
+    color: var(--surface);
+    background: var(--brand-primary);
+}
+
+.drug-delete-icon {
+    width: 16px;
+    height: 16px;
 }
 
 .drug-tile-name {
@@ -469,14 +503,14 @@ body.body-feed {
 .draft-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .draft-section {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 12px;
+    padding: 10px 12px;
 }
 
 .draft-section-title {
@@ -505,28 +539,25 @@ body.body-feed {
     width: 56px;
     height: 56px;
     object-fit: cover;
+    overflow: hidden;
     border-radius: 8px;
     background: var(--page);
+}
+
+.draft-media-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--brand-muted);
 }
 
 .draft-preview-video {
     display: block;
     flex: none;
-    width: 48px;
-    height: 85px;
+    width: 40px;
+    height: 71px;
     object-fit: cover;
     border-radius: 8px;
     background: #000000;
-}
-
-.draft-dose-row {
-    display: flex;
-    gap: 10px;
-}
-
-.draft-dose-field {
-    flex: 1;
-    min-width: 0;
 }
 
 .draft-file {
@@ -590,7 +621,33 @@ body.body-feed {
     outline-offset: 1px;
 }
 
+.draft-input[readonly] {
+    color: var(--brand-muted);
+}
 
+.draft-error {
+    margin: 0;
+    font-size: 12px;
+    color: #D7463F;
+}
+
+.draft-button {
+    width: 100%;
+    height: 38px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--surface);
+    background: var(--brand-gradient);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.draft-button:hover {
+    background: var(--brand-primary);
+}
 
 .tabbar {
     position: absolute;

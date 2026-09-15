@@ -9,11 +9,13 @@
 <body class="body-feed">
 <div class="app app-feed">
     <div class="screen screen-feed">
-        {{ if .Drug.DrugID }}
-        <video class="drug-video"
-               src="{{ .MediaBaseURL }}/{{ .Drug.VideoKey }}"
-               poster="{{ .MediaBaseURL }}/{{ .Drug.ImageKey }}"
-               autoplay loop muted playsinline></video>
+        {{ if .Drug.ID }}
+        <video class="drug-video" autoplay loop muted playsinline>
+            {{ if .Drug.VideoURL.String }}
+            <source src="{{ .Drug.VideoURL.String }}" type="video/mp4">
+            {{ end }}
+            <source src="/static/media/default-drug.mp4" type="video/mp4">
+        </video>
 
         <div class="drug-scrim"></div>
 
@@ -21,11 +23,11 @@
             <dl class="drug-params">
                 <div class="drug-param">
                     <dt class="drug-param-label">Взрослая доза</dt>
-                    <dd class="drug-param-value">{{ .Drug.RecommendedAdultDoseMg }} мг</dd>
+                    <dd class="drug-param-value">{{ .Drug.RecommendedAdultDoseMg.Float64 }} мг</dd>
                 </div>
                 <div class="drug-param">
                     <dt class="drug-param-label">Максимум в сутки</dt>
-                    <dd class="drug-param-value">{{ .Drug.MaxDailyDoseMg }} мг</dd>
+                    <dd class="drug-param-value">{{ .Drug.MaxDailyDoseMg.Float64 }} мг</dd>
                 </div>
             </dl>
 
@@ -36,7 +38,7 @@
                 <span class="drug-rail-caption">{{ .LikesCount }}</span>
             </p>
 
-            <a class="drug-next" href="/drug-feed/{{ .Drug.DrugID }}?next=true">
+            <a class="drug-next" href="/drug-feed/{{ .Drug.ID }}?next=true">
                 <svg class="drug-rail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h13M13 6l6 6-6 6"></path>
                 </svg>
@@ -49,13 +51,13 @@
 
             <details class="drug-description">
                 <summary class="drug-description-summary">
-                    <span class="drug-description-text">{{ .Drug.ShortInfo }}</span>
+                    <span class="drug-description-text">{{ .Drug.ShortInfo.String }}</span>
                     <span class="drug-description-toggle"></span>
                 </summary>
             </details>
         </div>
         {{ else }}
-        <p class="empty-note">Опубликованные препараты отсутствуют</p>
+        <p class="empty-note">Препарат не найден</p>
         {{ end }}
     </div>
 
