@@ -81,12 +81,22 @@
         <form class="draft-form" action="/drug-draft" method="POST">
             <section class="draft-section">
                 <h2 class="draft-section-title">Изображение препарата</h2>
+                <div class="draft-media">
+                    <img class="draft-preview-image" src="/static/media/default-drug.jpg" alt="Изображение по умолчанию">
+                    <p class="draft-media-note">Изображение по умолчанию</p>
+                </div>
                 <label class="draft-label" for="image_file">Файл изображения</label>
                 <input class="draft-file" type="file" id="image_file" accept="image/jpeg" required>
             </section>
 
             <section class="draft-section">
                 <h2 class="draft-section-title">Видео препарата</h2>
+                <div class="draft-media">
+                    <video class="draft-preview-video" autoplay loop muted playsinline>
+                        <source src="/static/media/default-drug.mp4" type="video/mp4">
+                    </video>
+                    <p class="draft-media-note">Видео по умолчанию</p>
+                </div>
                 <label class="draft-label" for="video_file">Файл видео</label>
                 <input class="draft-file" type="file" id="video_file" accept="video/mp4" required>
             </section>
