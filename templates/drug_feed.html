@@ -11,8 +11,8 @@
     <div class="screen screen-feed">
         {{ if .Drug.ID }}
         <video class="drug-video" autoplay loop muted playsinline>
-            {{ if .Drug.VideoURL.String }}
-            <source src="{{ .Drug.VideoURL.String }}" type="video/mp4">
+            {{ if .Drug.VideoURL }}
+            <source src="{{ .Drug.VideoURL }}" type="video/mp4">
             {{ end }}
             <source src="/static/media/default-drug.mp4" type="video/mp4">
         </video>

@@ -19,8 +19,8 @@
             <section class="draft-section">
                 <h2 class="draft-section-title">Изображение препарата</h2>
                 <div class="draft-media">
-                    {{ if .Drug.ImageURL.String }}
-                    <object class="draft-preview-image" data="{{ .Drug.ImageURL.String }}" type="image/jpeg">
+                    {{ if .Drug.ImageURL }}
+                    <object class="draft-preview-image" data="{{ .Drug.ImageURL }}" type="image/jpeg">
                         <img class="draft-preview-image" src="/static/media/default-drug.jpg" alt="{{ .Drug.DrugName }}">
                     </object>
                     <p class="draft-media-note">Изображение из хранилища</p>
@@ -35,12 +35,12 @@
                 <h2 class="draft-section-title">Видео препарата</h2>
                 <div class="draft-media">
                     <video class="draft-preview-video" autoplay loop muted playsinline>
-                        {{ if .Drug.VideoURL.String }}
-                        <source src="{{ .Drug.VideoURL.String }}" type="video/mp4">
+                        {{ if .Drug.VideoURL }}
+                        <source src="{{ .Drug.VideoURL }}" type="video/mp4">
                         {{ end }}
                         <source src="/static/media/default-drug.mp4" type="video/mp4">
                     </video>
-                    {{ if .Drug.VideoURL.String }}
+                    {{ if .Drug.VideoURL }}
                     <p class="draft-media-note">Видео из хранилища</p>
                     {{ else }}
                     <p class="draft-media-note">Видео по умолчанию</p>
@@ -102,7 +102,7 @@
             </section>
 
             <section class="draft-section">
-                <h2 class="draft-section-title">Описание препарата</h2>
+                <h2 class="draft-section-title">Наименование препарата</h2>
                 <label class="draft-label" for="drug_name">Наименование</label>
                 <input class="draft-input" type="text" id="drug_name" name="drug_name" maxlength="100" required>
             </section>

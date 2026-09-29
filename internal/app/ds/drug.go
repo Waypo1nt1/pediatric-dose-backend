@@ -16,8 +16,8 @@ type Drug struct {
 	DrugName               string          `gorm:"type:varchar(100);not null"`
 	ShortInfo              sql.NullString  `gorm:"type:varchar(500)"`
 	DrugStatus             string          `gorm:"type:varchar(15);not null"`
-	ImageURL               sql.NullString  `gorm:"type:varchar(255)"`
-	VideoURL               sql.NullString  `gorm:"type:varchar(255)"`
+	ImageURL               string          `gorm:"type:varchar(255);not null;default:''"`
+	VideoURL               string          `gorm:"type:varchar(255);not null;default:''"`
 	RecommendedAdultDoseMg sql.NullFloat64 `gorm:"type:numeric(8,2)"`
 	MaxDailyDoseMg         sql.NullFloat64 `gorm:"type:numeric(8,2)"`
 	CreatedAt              time.Time       `gorm:"not null"`
