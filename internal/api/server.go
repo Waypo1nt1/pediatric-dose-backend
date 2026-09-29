@@ -23,15 +23,21 @@ func StartServer() {
 	drugHandler := handler.NewHandler(drugRepository)
 
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
-	r.Static("/static", "./resources")
 
-	r.GET("/drugs", drugHandler.GetDrugCatalog)
-	r.POST("/drugs/delete", drugHandler.DeleteDrug)
-	r.GET("/drug-feed/*drug_id", drugHandler.GetDrugFeed)
-	r.GET("/drug-draft", drugHandler.GetDrugDraft)
-	r.POST("/drug-draft", drugHandler.CreateDrugDraft)
-	r.POST("/drug-draft/publish", drugHandler.PublishDrugDraft)
+	api := r.Group("/api")
+
+	api.GET("/drugs", drugHandler.GetDrugs)
+	api.GET("/drugs/feed", drugHandler.GetDrugFeed)
+	api.GET("/drugs/feed/:drug_id", drugHandler.GetDrugFeed)
+	api.GET("/drugs/draft", drugHandler.GetDrugDraft)
+	api.POST("/drugs", drugHandler.CreateDrug)
+	api.PUT("/drugs/publish", drugHandler.PublishDrug)
+	api.DELETE("/drugs/:drug_id", drugHandler.DeleteDrug)
+	api.POST("/drugs/:drug_id/like", drugHandler.LikeDrug)
+
+	api.POST("/users/register", drugHandler.RegisterUser)
+	api.POST("/users/login", drugHandler.LoginUser)
+	api.POST("/users/logout", drugHandler.LogoutUser)
 
 	if err := r.Run("localhost:8080"); err != nil {
 		logrus.Error(err)

@@ -5,32 +5,23 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
 	"pediatric-dose-backend/internal/app/ds"
 	"pediatric-dose-backend/internal/app/repository"
+	"pediatric-dose-backend/internal/app/schemes"
+	"pediatric-dose-backend/internal/app/singleton"
 )
 
 const (
-	adultDoseSliderMinMg = 0
-	adultDoseSliderMaxMg = 1000
-	adultDoseScaleMarks  = 4
-	maxDrugDoseMg        = 100000
-	maxDrugNameLength    = 100
-	maxShortInfoLength   = 500
-	currentCreatorID     = 1
+	adultDoseFilterMinMg = 0
+	adultDoseFilterMaxMg = 1000
 )
 
 type Handler struct {
 	Repository *repository.Repository
-}
-
-type DrugCard struct {
-	ds.Drug
-	LikesCount int64
 }
 
 func NewHandler(r *repository.Repository) *Handler {
@@ -39,12 +30,12 @@ func NewHandler(r *repository.Repository) *Handler {
 	}
 }
 
-func (h *Handler) GetDrugCatalog(ctx *gin.Context) {
+func (h *Handler) GetDrugs(ctx *gin.Context) {
 	minAdultDoseValue := ctx.Query("min_adult_dose")
 	maxAdultDoseValue := ctx.Query("max_adult_dose")
 
-	minAdultDoseMg := parseAdultDose(minAdultDoseValue, adultDoseSliderMinMg)
-	maxAdultDoseMg := parseAdultDose(maxAdultDoseValue, adultDoseSliderMaxMg)
+	minAdultDoseMg := parseAdultDose(minAdultDoseValue, adultDoseFilterMinMg)
+	maxAdultDoseMg := parseAdultDose(maxAdultDoseValue, adultDoseFilterMaxMg)
 	if minAdultDoseMg > maxAdultDoseMg {
 		minAdultDoseMg, maxAdultDoseMg = maxAdultDoseMg, minAdultDoseMg
 	}
@@ -59,30 +50,16 @@ func (h *Handler) GetDrugCatalog(ctx *gin.Context) {
 	}
 	if err != nil {
 		logrus.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+		return
 	}
 
-	drugCards := make([]DrugCard, 0, len(drugs))
+	response := make([]schemes.Drug, 0, len(drugs))
 	for _, drug := range drugs {
-		likesCount, err := h.Repository.GetDrugLikesCount(drug.ID)
-		if err != nil {
-			logrus.Error(err)
-		}
-
-		drugCards = append(drugCards, DrugCard{
-			Drug:       drug,
-			LikesCount: likesCount,
-		})
+		response = append(response, h.newDrugResponse(drug))
 	}
 
-	ctx.HTML(http.StatusOK, "drugs_catalog.html", gin.H{
-		"DrugCards":          drugCards,
-		"MinAdultDose":       minAdultDoseMg,
-		"MaxAdultDose":       maxAdultDoseMg,
-		"AdultDoseSliderMin": adultDoseSliderMinMg,
-		"AdultDoseSliderMax": adultDoseSliderMaxMg,
-		"AdultDoseScale":     adultDoseScale(),
-		"ActiveTab":          "catalog",
-	})
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) GetDrugFeed(ctx *gin.Context) {
@@ -96,11 +73,7 @@ func (h *Handler) GetDrugFeed(ctx *gin.Context) {
 	} else {
 		drugID, convertErr := strconv.Atoi(drugIDValue)
 		if convertErr != nil {
-			logrus.Error(convertErr)
-			ctx.HTML(http.StatusNotFound, "drug_feed.html", gin.H{
-				"Drug":      ds.Drug{},
-				"ActiveTab": "feed",
-			})
+			ctx.Status(http.StatusNotFound)
 			return
 		}
 
@@ -110,102 +83,170 @@ func (h *Handler) GetDrugFeed(ctx *gin.Context) {
 			drug, err = h.Repository.GetDrugByID(drugID)
 		}
 	}
-
 	if err != nil {
-		logrus.Error(err)
-
-		status := http.StatusInternalServerError
-		if errors.Is(err, repository.ErrDrugNotFound) {
-			status = http.StatusNotFound
-		}
-
-		ctx.HTML(status, "drug_feed.html", gin.H{
-			"Drug":      ds.Drug{},
-			"ActiveTab": "feed",
-		})
+		h.abortWithDrugError(ctx, err)
 		return
 	}
 
+	ctx.JSON(http.StatusOK, h.newDrugResponse(drug))
+}
+
+func (h *Handler) GetDrugDraft(ctx *gin.Context) {
+	drug, err := h.Repository.GetDraftDrug(singleton.GetCurrentUser().ID)
+	if err != nil {
+		h.abortWithDrugError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, h.newDrugResponse(drug))
+}
+
+func (h *Handler) CreateDrug(ctx *gin.Context) {
+	var request schemes.CreateDrugRequest
+	if err := ctx.ShouldBind(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	drug, err := h.Repository.CreateDrugDraft(singleton.GetCurrentUser().ID, strings.TrimSpace(request.DrugName), "", "")
+	if err != nil {
+		logrus.Error(err)
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, h.newDrugResponse(drug))
+}
+
+func (h *Handler) PublishDrug(ctx *gin.Context) {
+	var request schemes.PublishDrugRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	if request.MaxDailyDoseMg < request.RecommendedAdultDoseMg {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	drug, err := h.Repository.PublishDrugDraft(
+		singleton.GetCurrentUser().ID,
+		strings.TrimSpace(request.ShortInfo),
+		request.RecommendedAdultDoseMg,
+		request.MaxDailyDoseMg,
+	)
+	if err != nil {
+		h.abortWithDrugError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, h.newDrugResponse(drug))
+}
+
+func (h *Handler) DeleteDrug(ctx *gin.Context) {
+	drugID, err := strconv.Atoi(ctx.Param("drug_id"))
+	if err != nil {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	if err := h.Repository.DeleteDrug(drugID, singleton.GetCurrentUser().ID); err != nil {
+		h.abortWithDrugError(ctx, err)
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
+func (h *Handler) LikeDrug(ctx *gin.Context) {
+	drugID, err := strconv.Atoi(ctx.Param("drug_id"))
+	if err != nil {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	var request schemes.LikeDrugRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	currentUserID := singleton.GetCurrentUser().ID
+
+	if *request.Value == 1 {
+		err = h.Repository.SetDrugLike(currentUserID, drugID)
+	} else {
+		err = h.Repository.RemoveDrugLike(currentUserID, drugID)
+	}
+	if err != nil {
+		h.abortWithDrugError(ctx, err)
+		return
+	}
+
+	drug, err := h.Repository.GetDrugByID(drugID)
+	if err != nil {
+		h.abortWithDrugError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, h.newDrugResponse(drug))
+}
+
+func (h *Handler) RegisterUser(ctx *gin.Context) {
+	var request schemes.RegisterUserRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.Repository.CreateUser(strings.TrimSpace(request.Login), request.Password)
+	if err != nil {
+		logrus.Error(err)
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, schemes.NewUser(user))
+}
+
+func (h *Handler) LoginUser(ctx *gin.Context) {
+	var request schemes.LoginUserRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.Repository.GetUserByLogin(strings.TrimSpace(request.Login))
+	if err != nil || user.Password != request.Password {
+		ctx.Status(http.StatusNotFound)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, schemes.NewUser(user))
+}
+
+func (h *Handler) LogoutUser(ctx *gin.Context) {
+	ctx.Status(http.StatusOK)
+}
+
+func (h *Handler) newDrugResponse(drug ds.Drug) schemes.Drug {
 	likesCount, err := h.Repository.GetDrugLikesCount(drug.ID)
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	ctx.HTML(http.StatusOK, "drug_feed.html", gin.H{
-		"Drug":       drug,
-		"LikesCount": likesCount,
-		"ActiveTab":  "feed",
-	})
+	return schemes.NewDrug(drug, likesCount, singleton.GetCurrentUser().ID)
 }
 
-func (h *Handler) GetDrugDraft(ctx *gin.Context) {
-	h.renderDrugDraft(ctx, http.StatusOK, "")
-}
-
-func (h *Handler) CreateDrugDraft(ctx *gin.Context) {
-	drugName := strings.TrimSpace(ctx.PostForm("drug_name"))
-	if drugName == "" || utf8.RuneCountInString(drugName) > maxDrugNameLength {
-		h.renderDrugDraft(ctx, http.StatusBadRequest, "Укажите наименование препарата до 100 символов")
+func (h *Handler) abortWithDrugError(ctx *gin.Context, err error) {
+	if errors.Is(err, repository.ErrDrugNotFound) {
+		ctx.Status(http.StatusNotFound)
 		return
 	}
 
-	err := h.Repository.CreateDrugDraft(currentCreatorID, drugName)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	ctx.Redirect(http.StatusFound, "/drug-draft")
-}
-
-func (h *Handler) PublishDrugDraft(ctx *gin.Context) {
-	shortInfo := strings.TrimSpace(ctx.PostForm("short_info"))
-	recommendedAdultDoseMg, adultDoseErr := strconv.ParseFloat(ctx.PostForm("recommended_adult_dose_mg"), 64)
-	maxDailyDoseMg, maxDailyDoseErr := strconv.ParseFloat(ctx.PostForm("max_daily_dose_mg"), 64)
-
-	if shortInfo == "" || utf8.RuneCountInString(shortInfo) > maxShortInfoLength ||
-		adultDoseErr != nil || maxDailyDoseErr != nil ||
-		recommendedAdultDoseMg <= 0 || maxDailyDoseMg < recommendedAdultDoseMg || maxDailyDoseMg > maxDrugDoseMg {
-		h.renderDrugDraft(ctx, http.StatusBadRequest, "Заполните краткое описание и обе дозы: максимум в сутки не меньше взрослой дозы")
-		return
-	}
-
-	drugID, err := h.Repository.PublishDrugDraft(currentCreatorID, shortInfo, recommendedAdultDoseMg, maxDailyDoseMg)
-	if err != nil {
-		logrus.Error(err)
-		ctx.Redirect(http.StatusFound, "/drug-draft")
-		return
-	}
-
-	ctx.Redirect(http.StatusFound, "/drug-feed/"+strconv.FormatUint(uint64(drugID), 10))
-}
-
-func (h *Handler) DeleteDrug(ctx *gin.Context) {
-	drugID, err := strconv.Atoi(ctx.PostForm("drug_id"))
-	if err != nil {
-		logrus.Error(err)
-		ctx.Redirect(http.StatusFound, "/drugs")
-		return
-	}
-
-	err = h.Repository.DeleteDrug(drugID)
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	ctx.Redirect(http.StatusFound, "/drugs")
-}
-
-func (h *Handler) renderDrugDraft(ctx *gin.Context, status int, errorMessage string) {
-	drug, err := h.Repository.GetDraftDrug(currentCreatorID)
-	if err != nil && !errors.Is(err, repository.ErrDrugNotFound) {
-		logrus.Error(err)
-	}
-
-	ctx.HTML(status, "drug_draft.html", gin.H{
-		"Drug":         drug,
-		"ErrorMessage": errorMessage,
-		"ActiveTab":    "draft",
-	})
+	logrus.Error(err)
+	ctx.Status(http.StatusInternalServerError)
 }
 
 func parseAdultDose(value string, fallback float64) float64 {
@@ -214,24 +255,9 @@ func parseAdultDose(value string, fallback float64) float64 {
 		return fallback
 	}
 
-	if dose < adultDoseSliderMinMg {
-		return adultDoseSliderMinMg
-	}
-
-	if dose > adultDoseSliderMaxMg {
-		return adultDoseSliderMaxMg
+	if dose < adultDoseFilterMinMg {
+		return adultDoseFilterMinMg
 	}
 
 	return dose
-}
-
-func adultDoseScale() []int {
-	step := (adultDoseSliderMaxMg - adultDoseSliderMinMg) / adultDoseScaleMarks
-
-	scale := make([]int, 0, adultDoseScaleMarks+1)
-	for mark := adultDoseSliderMinMg; mark <= adultDoseSliderMaxMg; mark += step {
-		scale = append(scale, mark)
-	}
-
-	return scale
 }

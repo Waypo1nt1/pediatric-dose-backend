@@ -14,6 +14,8 @@ import (
 var (
 	ErrDrugNotFound    = errors.New("препарат не найден")
 	ErrDrugDraftExists = errors.New("у пользователя уже есть препарат в статусе черновик")
+	ErrUserNotFound    = errors.New("пользователь не найден")
+	ErrUserLoginTaken  = errors.New("логин занят")
 )
 
 type Repository struct {
@@ -98,28 +100,34 @@ func (r *Repository) GetDrugLikesCount(drugID uint) (int64, error) {
 	return likesCount, err
 }
 
-func (r *Repository) CreateDrugDraft(creatorID uint, drugName string) error {
+func (r *Repository) CreateDrugDraft(creatorID uint, drugName, imageURL, videoURL string) (ds.Drug, error) {
 	_, err := r.GetDraftDrug(creatorID)
 	if err == nil {
-		return ErrDrugDraftExists
+		return ds.Drug{}, ErrDrugDraftExists
 	}
 	if !errors.Is(err, ErrDrugNotFound) {
-		return err
+		return ds.Drug{}, err
 	}
 
 	drug := ds.Drug{
 		DrugName:   drugName,
 		DrugStatus: ds.DrugStatusDraft,
+		ImageURL:   imageURL,
+		VideoURL:   videoURL,
 		CreatorID:  creatorID,
 	}
 
-	return r.db.Create(&drug).Error
+	if err := r.db.Create(&drug).Error; err != nil {
+		return ds.Drug{}, err
+	}
+
+	return drug, nil
 }
 
-func (r *Repository) PublishDrugDraft(creatorID uint, shortInfo string, recommendedAdultDoseMg, maxDailyDoseMg float64) (uint, error) {
+func (r *Repository) PublishDrugDraft(creatorID uint, shortInfo string, recommendedAdultDoseMg, maxDailyDoseMg float64) (ds.Drug, error) {
 	drug, err := r.GetDraftDrug(creatorID)
 	if err != nil {
-		return 0, err
+		return ds.Drug{}, err
 	}
 
 	err = r.db.Model(&drug).Updates(map[string]interface{}{
@@ -130,21 +138,21 @@ func (r *Repository) PublishDrugDraft(creatorID uint, shortInfo string, recommen
 		"published_at":              time.Now(),
 	}).Error
 	if err != nil {
-		return 0, err
+		return ds.Drug{}, err
 	}
 
-	return drug.ID, nil
+	return r.GetDrugByID(int(drug.ID))
 }
 
-func (r *Repository) DeleteDrug(drugID int) error {
+func (r *Repository) DeleteDrug(drugID int, creatorID uint) error {
 	sqlDB, err := r.db.DB()
 	if err != nil {
 		return err
 	}
 
-	query := "UPDATE drugs SET drug_status = 'deleted' WHERE id = $1 AND drug_status = 'published' RETURNING id"
+	query := "UPDATE drugs SET drug_status = 'deleted' WHERE id = $1 AND creator_id = $2 AND drug_status = 'published' RETURNING id"
 
-	row := sqlDB.QueryRow(query, drugID)
+	row := sqlDB.QueryRow(query, drugID, creatorID)
 
 	var deletedDrugID uint
 	err = row.Scan(&deletedDrugID)
@@ -153,4 +161,59 @@ func (r *Repository) DeleteDrug(drugID int) error {
 	}
 
 	return err
+}
+
+func (r *Repository) SetDrugLike(userID uint, drugID int) error {
+	drug, err := r.GetDrugByID(drugID)
+	if err != nil {
+		return err
+	}
+
+	like := ds.DrugLike{
+		UserID: userID,
+		DrugID: drug.ID,
+	}
+
+	return r.db.Where("user_id = ? AND drug_id = ?", userID, drug.ID).FirstOrCreate(&like).Error
+}
+
+func (r *Repository) RemoveDrugLike(userID uint, drugID int) error {
+	drug, err := r.GetDrugByID(drugID)
+	if err != nil {
+		return err
+	}
+
+	return r.db.Where("user_id = ? AND drug_id = ?", userID, drug.ID).Delete(&ds.DrugLike{}).Error
+}
+
+func (r *Repository) CreateUser(login, password string) (ds.User, error) {
+	var existing ds.User
+	err := r.db.Where("login = ?", login).First(&existing).Error
+	if err == nil {
+		return ds.User{}, ErrUserLoginTaken
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return ds.User{}, err
+	}
+
+	user := ds.User{
+		Login:    login,
+		Password: password,
+	}
+
+	if err := r.db.Create(&user).Error; err != nil {
+		return ds.User{}, err
+	}
+
+	return user, nil
+}
+
+func (r *Repository) GetUserByLogin(login string) (ds.User, error) {
+	var user ds.User
+	err := r.db.Where("login = ?", login).First(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return ds.User{}, ErrUserNotFound
+	}
+
+	return user, err
 }
