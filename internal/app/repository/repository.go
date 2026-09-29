@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/minio/minio-go/v7"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -19,16 +20,29 @@ var (
 )
 
 type Repository struct {
-	db *gorm.DB
+	db            *gorm.DB
+	minio         *minio.Client
+	minioEndpoint string
+	minioBucket   string
 }
 
-func NewRepository(dsn string) (*Repository, error) {
+func NewRepository(dsn string, minioConfig MinioConfig) (*Repository, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &Repository{db: db}, nil
+	minioClient, err := newMinioClient(minioConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{
+		db:            db,
+		minio:         minioClient,
+		minioEndpoint: minioConfig.Endpoint,
+		minioBucket:   minioConfig.Bucket,
+	}, nil
 }
 
 func (r *Repository) GetPublishedDrugs() ([]ds.Drug, error) {
@@ -216,4 +230,19 @@ func (r *Repository) GetUserByLogin(login string) (ds.User, error) {
 	}
 
 	return user, err
+}
+
+func (r *Repository) SetDrugMedia(drugID uint, imageURL, videoURL string) (ds.Drug, error) {
+	err := r.db.Model(&ds.Drug{}).Where("id = ?", drugID).Updates(map[string]interface{}{
+		"image_url": imageURL,
+		"video_url": videoURL,
+	}).Error
+	if err != nil {
+		return ds.Drug{}, err
+	}
+
+	var drug ds.Drug
+	err = r.db.Where("id = ?", drugID).First(&drug).Error
+
+	return drug, err
 }

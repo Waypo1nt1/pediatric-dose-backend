@@ -2,6 +2,8 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
@@ -108,6 +110,18 @@ func (h *Handler) CreateDrug(ctx *gin.Context) {
 		return
 	}
 
+	image, err := ctx.FormFile("image")
+	if err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
+	video, err := ctx.FormFile("video")
+	if err != nil {
+		ctx.Status(http.StatusBadRequest)
+		return
+	}
+
 	drug, err := h.Repository.CreateDrugDraft(singleton.GetCurrentUser().ID, strings.TrimSpace(request.DrugName), "", "")
 	if err != nil {
 		logrus.Error(err)
@@ -115,7 +129,40 @@ func (h *Handler) CreateDrug(ctx *gin.Context) {
 		return
 	}
 
+	imageURL, err := h.uploadDrugMedia(drug.ID, image, "image/jpeg", "jpg")
+	if err != nil {
+		logrus.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
+	videoURL, err := h.uploadDrugMedia(drug.ID, video, "video/mp4", "mp4")
+	if err != nil {
+		logrus.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
+	drug, err = h.Repository.SetDrugMedia(drug.ID, imageURL, videoURL)
+	if err != nil {
+		logrus.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
 	ctx.JSON(http.StatusCreated, h.newDrugResponse(drug))
+}
+
+func (h *Handler) uploadDrugMedia(drugID uint, file *multipart.FileHeader, contentType, extension string) (string, error) {
+	source, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	defer source.Close()
+
+	objectName := fmt.Sprintf("drug_%d.%s", drugID, extension)
+
+	return h.Repository.UploadDrugMedia(objectName, contentType, source, file.Size)
 }
 
 func (h *Handler) PublishDrug(ctx *gin.Context) {

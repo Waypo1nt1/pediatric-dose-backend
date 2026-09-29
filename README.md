@@ -15,6 +15,10 @@ DB_PORT=5432
 DB_USER=pediatric_dose_user
 DB_PASS=pediatric_dose_password
 DB_NAME=pediatric_dose
+MINIO_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=root
+MINIO_SECRET_KEY=rootpassword
+MINIO_BUCKET=drug-media
 ```
 
 ```
@@ -36,7 +40,7 @@ go run ./cmd/pediatric-dose-backend
 | GET | `/api/drugs/feed` | первый опубликованный препарат |
 | GET | `/api/drugs/feed/:id` | препарат по ид, с `?next=true` — следующий за ним |
 | GET | `/api/drugs/draft` | черновик текущего пользователя |
-| POST | `/api/drugs` | создать черновик, поле `drug_name` |
+| POST | `/api/drugs` | создать черновик: поле `drug_name`, файлы `image` и `video` |
 | PUT | `/api/drugs/publish` | опубликовать черновик: `short_info`, `recommended_adult_dose_mg`, `max_daily_dose_mg` |
 | DELETE | `/api/drugs/:id` | удалить свой препарат, статус меняется на `deleted` |
 | POST | `/api/drugs/:id/like` | лайк, поле `value`: 1 ставит, 0 убирает |
@@ -47,6 +51,9 @@ go run ./cmd/pediatric-dose-backend
 Препарат возвращается одним и тем же набором полей: `id`, `drug_name`, `short_info`, `image_url`,
 `video_url`, `recommended_adult_dose_mg`, `max_daily_dose_mg`, `likes_count`, `is_creator`.
 Признак `is_creator` равен 1, если препарат создал текущий пользователь.
+
+Файлы при добавлении уходят в MinIO, в бакет `drug-media`. Имя объекта собирается из ид препарата:
+`drug_11.jpg` и `drug_11.mp4`. В таблицу записываются полные адреса файлов.
 
 ## Таблицы
 

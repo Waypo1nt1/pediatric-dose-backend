@@ -14,7 +14,7 @@ import (
 func StartServer() {
 	log.Println("Server start up")
 
-	drugRepository, err := repository.NewRepository(dsn.FromEnv())
+	drugRepository, err := repository.NewRepository(dsn.FromEnv(), repository.MinioFromEnv())
 	if err != nil {
 		logrus.Error("ошибка подключения к базе данных препаратов: ", err)
 		return
