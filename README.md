@@ -49,42 +49,14 @@ go run ./cmd/pediatric-dose-backend
 
 ## Таблицы
 
-### users
+| Таблица | Поля |
+| --- | --- |
+| `users` | `id` bigint, `login` varchar(25) уникальный, `password` varchar(100), `is_moderator` boolean |
+| `drugs` | `id` bigint, `drug_name` varchar(100), `short_info` varchar(500), `drug_status` varchar(15), `image_url` varchar(255), `video_url` varchar(255), `recommended_adult_dose_mg` numeric(8,2), `max_daily_dose_mg` numeric(8,2), `created_at` timestamptz, `creator_id` bigint, `published_at` timestamptz |
+| `drug_likes` | `id` bigint, `user_id` bigint, `drug_id` bigint |
 
-| Поле | Тип | Описание |
-| --- | --- | --- |
-| `id` | bigint | первичный ключ |
-| `login` | varchar(25) | логин, уникальный |
-| `password` | varchar(100) | пароль |
-| `is_moderator` | boolean | признак модератора |
-
-### drugs
-
-| Поле | Тип | Описание |
-| --- | --- | --- |
-| `id` | bigint | первичный ключ |
-| `drug_name` | varchar(100) | наименование |
-| `short_info` | varchar(500) | краткое описание |
-| `drug_status` | varchar(15) | статус: `draft`, `published`, `deleted` |
-| `image_url` | varchar(255) | адрес изображения в MinIO |
-| `video_url` | varchar(255) | адрес видео в MinIO |
-| `recommended_adult_dose_mg` | numeric(8,2) | взрослая доза, мг |
-| `max_daily_dose_mg` | numeric(8,2) | максимум в сутки, мг |
-| `created_at` | timestamptz | дата создания |
-| `creator_id` | bigint | создатель, внешний ключ на `users` |
-| `published_at` | timestamptz | дата публикации |
-
-### drug_likes
-
-Лайки, связь многие-ко-многим.
-
-| Поле | Тип | Описание |
-| --- | --- | --- |
-| `id` | bigint | первичный ключ |
-| `user_id` | bigint | внешний ключ на `users` |
-| `drug_id` | bigint | внешний ключ на `drugs` |
-
-Пара `user_id` и `drug_id` уникальна. Каскадного удаления нет, все внешние ключи с `RESTRICT`.
+Статусы препарата: `draft`, `published`, `deleted`. Внешние ключи: `drugs.creator_id` и `drug_likes.user_id`
+на `users`, `drug_likes.drug_id` на `drugs`, все с `RESTRICT`. Пара `user_id` и `drug_id` уникальна.
 
 ## Структура
 
