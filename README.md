@@ -37,8 +37,7 @@ go run ./cmd/pediatric-dose-backend
 | Метод | Адрес | Что делает |
 | --- | --- | --- |
 | GET | `/api/drugs` | список опубликованных препаратов, фильтр `min_adult_dose` и `max_adult_dose` |
-| GET | `/api/drugs/feed` | первый опубликованный препарат |
-| GET | `/api/drugs/feed/:id` | препарат по ид, с `?next=true` — следующий за ним |
+| GET | `/api/drugs/feed` и `/api/drugs/feed/:id` | лента: без ид — первый опубликованный, с ид — указанный, с `?next=true` — следующий за ним |
 | GET | `/api/drugs/draft` | черновик текущего пользователя |
 | POST | `/api/drugs` | создать черновик: поле `drug_name`, файлы `image` и `video` |
 | PUT | `/api/drugs/publish` | опубликовать черновик: `short_info`, `recommended_adult_dose_mg`, `max_daily_dose_mg` |
