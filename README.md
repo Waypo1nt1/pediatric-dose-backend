@@ -49,16 +49,42 @@ go run ./cmd/pediatric-dose-backend
 
 ## Таблицы
 
-`users` — пользователи: `id`, `login`, `password`, `is_moderator`.
+### users
 
-`drugs` — препараты: `id`, `drug_name`, `short_info`, `drug_status`, `image_url`, `video_url`,
-`recommended_adult_dose_mg`, `max_daily_dose_mg`, `created_at`, `creator_id`, `published_at`.
-Статус: `draft`, `published`, `deleted`. Внешний ключ `creator_id` на `users`.
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `id` | bigint | первичный ключ |
+| `login` | varchar(25) | логин, уникальный |
+| `password` | varchar(100) | пароль |
+| `is_moderator` | boolean | признак модератора |
 
-`drug_likes` — лайки, связь многие-ко-многим: `id`, `user_id`, `drug_id`. Внешние ключи на обе таблицы,
-пара `user_id` и `drug_id` уникальна.
+### drugs
 
-Каскадного удаления нет, все внешние ключи с `RESTRICT`.
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `id` | bigint | первичный ключ |
+| `drug_name` | varchar(100) | наименование |
+| `short_info` | varchar(500) | краткое описание |
+| `drug_status` | varchar(15) | статус: `draft`, `published`, `deleted` |
+| `image_url` | varchar(255) | адрес изображения в MinIO |
+| `video_url` | varchar(255) | адрес видео в MinIO |
+| `recommended_adult_dose_mg` | numeric(8,2) | взрослая доза, мг |
+| `max_daily_dose_mg` | numeric(8,2) | максимум в сутки, мг |
+| `created_at` | timestamptz | дата создания |
+| `creator_id` | bigint | создатель, внешний ключ на `users` |
+| `published_at` | timestamptz | дата публикации |
+
+### drug_likes
+
+Лайки, связь многие-ко-многим.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `id` | bigint | первичный ключ |
+| `user_id` | bigint | внешний ключ на `users` |
+| `drug_id` | bigint | внешний ключ на `drugs` |
+
+Пара `user_id` и `drug_id` уникальна. Каскадного удаления нет, все внешние ключи с `RESTRICT`.
 
 ## Структура
 
