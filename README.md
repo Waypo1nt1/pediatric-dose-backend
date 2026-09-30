@@ -34,7 +34,7 @@ go run ./cmd/pediatric-dose-backend
 
 Текущий пользователь задан константой в `internal/app/singleton`.
 
-| Метод | Адрес | Что делает |
+| Метод | Адрес | Описание |
 | --- | --- | --- |
 | GET | `/api/drugs` | список опубликованных препаратов, фильтр `min_adult_dose` и `max_adult_dose` |
 | GET | `/api/drugs/feed` и `/api/drugs/feed/:id` | лента: без ид — первый опубликованный, с ид — указанный, с `?next=true` — следующий за ним |
